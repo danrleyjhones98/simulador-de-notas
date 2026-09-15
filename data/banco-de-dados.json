@@ -41,7 +41,7 @@
       "unidade": "UN",
       "precoCusto": 1250,
       "precoVenda": 1890,
-      "estoqueAtual": 12,
+      "estoqueAtual": 13,
       "ncm": "8504.40.40"
     },
     {
@@ -133,7 +133,35 @@
       "ncm": "8504.40.21"
     }
   ],
-  "notas": [],
+  "notas": [
+    {
+      "tipoOperacao": "ENTRADA",
+      "naturezaOperacao": "Compra para Comercialização e Estoque",
+      "numeroNf": "089458",
+      "serieNf": "1",
+      "dataEmissao": "2026-09-15",
+      "parceiro": "Dell Computadores do Brasil Ltda (Dell Technologies)",
+      "documentoParceiro": "72.381.189/0001-10",
+      "possuiProdutos": true,
+      "valorTotalNota": 1250,
+      "totalParcelas": 0,
+      "statusConciliacao": "DIVERGENTE",
+      "itens": [
+        {
+          "produtoId": "prod-4",
+          "codigo": "PRD-NOB-04",
+          "produto": "Nobreak Senoidal APC Smart-UPS 1500VA Bivolt",
+          "unidade": "UN",
+          "quantidade": 1,
+          "valorUnitario": 1250,
+          "total": 1250
+        }
+      ],
+      "parcelas": [],
+      "id": "nf-mu34o22mgwmq",
+      "criadoEm": "2026-09-15T20:31:59.614Z"
+    }
+  ],
   "parceiros": [
     {
       "id": "parc-1",
