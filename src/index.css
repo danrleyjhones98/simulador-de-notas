@@ -27,27 +27,44 @@
   }
 }
 
-body {
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: #09090b;
   color: #fafafa;
-  overflow-x: hidden;
 }
 
-/* Custom Scrollbar */
+/* Scrollbars Coss UI Padrão Unificado */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #27272a;
   border-radius: 9999px;
+  transition: background 0.2s ease;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #3f3f46;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* Regras de Impressão Oficial do DANFE SEFAZ */
@@ -57,11 +74,11 @@ body {
     margin: 6mm;
   }
 
-  body {
+  html, body, #root {
+    height: auto !important;
+    overflow: visible !important;
     background: #ffffff !important;
     color: #000000 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
 
   .no-print {

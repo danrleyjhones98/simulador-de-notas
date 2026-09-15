@@ -46,7 +46,6 @@ export const App: React.FC = () => {
       setSelectedNotaId(notaId);
     }
     setActiveTab(tab);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNotaCreated = async (newNotaId: number) => {
@@ -56,8 +55,8 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#fafafa] flex">
-      {/* Sidebar Navigation */}
+    <div className="h-screen w-screen flex overflow-hidden bg-[#09090b] text-[#fafafa]">
+      {/* Sidebar Fixa e com Rolagem Própria e Isolada */}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -65,62 +64,64 @@ export const App: React.FC = () => {
         produtosCount={produtos.length}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto overflow-y-auto w-full">
-        {loading && notas.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-zinc-400">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-            <p className="text-xs font-semibold">Conectando ao banco PostgreSQL 16...</p>
-          </div>
-        ) : (
-          <>
-            {activeTab === 'dashboard' && (
-              <DashboardPage
-                notas={notas}
-                produtos={produtos}
-                parceiros={parceiros}
-                onNavigate={handleNavigate}
-              />
-            )}
+      {/* Conteúdo Principal com Rolagem Independente */}
+      <main className="h-full flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8">
+        <div className="max-w-7xl mx-auto w-full pb-12">
+          {loading && notas.length === 0 ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-zinc-400">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+              <p className="text-xs font-semibold">Conectando ao banco PostgreSQL 16...</p>
+            </div>
+          ) : (
+            <>
+              {activeTab === 'dashboard' && (
+                <DashboardPage
+                  notas={notas}
+                  produtos={produtos}
+                  parceiros={parceiros}
+                  onNavigate={handleNavigate}
+                />
+              )}
 
-            {activeTab === 'nova-nota' && (
-              <NovaNotaPage
-                produtos={produtos}
-                parceiros={parceiros}
-                onNotaCreated={handleNotaCreated}
-              />
-            )}
+              {activeTab === 'nova-nota' && (
+                <NovaNotaPage
+                  produtos={produtos}
+                  parceiros={parceiros}
+                  onNotaCreated={handleNotaCreated}
+                />
+              )}
 
-            {activeTab === 'danfe' && (
-              <DanfePreviewPage
-                notas={notas}
-                selectedNotaId={selectedNotaId}
-                onBack={() => setActiveTab('dashboard')}
-              />
-            )}
+              {activeTab === 'danfe' && (
+                <DanfePreviewPage
+                  notas={notas}
+                  selectedNotaId={selectedNotaId}
+                  onBack={() => setActiveTab('dashboard')}
+                />
+              )}
 
-            {activeTab === 'produtos' && (
-              <ProdutosPage
-                produtos={produtos}
-                onRefresh={fetchData}
-              />
-            )}
+              {activeTab === 'produtos' && (
+                <ProdutosPage
+                  produtos={produtos}
+                  onRefresh={fetchData}
+                />
+              )}
 
-            {activeTab === 'parceiros' && (
-              <ParceirosPage
-                parceiros={parceiros}
-                onRefresh={fetchData}
-              />
-            )}
+              {activeTab === 'parceiros' && (
+                <ParceirosPage
+                  parceiros={parceiros}
+                  onRefresh={fetchData}
+                />
+              )}
 
-            {activeTab === 'historico' && (
-              <HistoricoPage
-                notas={notas}
-                onViewDanfe={(id) => handleNavigate('danfe', id)}
-              />
-            )}
-          </>
-        )}
+              {activeTab === 'historico' && (
+                <HistoricoPage
+                  notas={notas}
+                  onViewDanfe={(id) => handleNavigate('danfe', id)}
+                />
+              )}
+            </>
+          )}
+        </div>
       </main>
     </div>
   );

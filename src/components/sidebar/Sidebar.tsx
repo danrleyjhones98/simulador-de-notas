@@ -2,14 +2,11 @@ import React from 'react';
 import { 
   LayoutDashboard, 
   FilePlus2, 
-  FileText, 
   Package, 
   Users, 
   History, 
   Database, 
-  CheckCircle2,
   Printer,
-  ChevronRight,
   ShieldCheck
 } from 'lucide-react';
 
@@ -36,7 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="no-print w-64 min-h-screen bg-[#0d0d10] border-r border-[#222226] flex flex-col justify-between select-none">
+    <aside className="no-print h-full w-64 flex-shrink-0 bg-[#0d0d10] border-r border-[#222226] flex flex-col justify-between select-none overflow-y-auto z-20">
       <div>
         {/* Header / Brand */}
         <div className="p-5 border-b border-[#222226]">
@@ -70,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-150 ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-semibold'
                     : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
                 }`}
               >

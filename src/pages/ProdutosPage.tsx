@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Produto } from '../types';
 import { formatCurrency } from '../lib/utils';
-import { Package, Search, Plus, Boxes, ArrowUpDown } from 'lucide-react';
+import { SearchableSelect, SelectOption } from '../components/ui/SearchableSelect';
+import { Package, Search, Plus, Boxes } from 'lucide-react';
 
 interface ProdutosProps {
   produtos: Produto[];
@@ -23,6 +24,24 @@ export const ProdutosPage: React.FC<ProdutosProps> = ({ produtos, onRefresh }) =
     aliq_icms: '18',
     aliq_ipi: '5',
   });
+
+  const categoriaOptions: SelectOption[] = [
+    { value: 'Informática & TI', label: 'Informática & TI' },
+    { value: 'Periféricos', label: 'Periféricos' },
+    { value: 'Energia', label: 'Energia' },
+    { value: 'Redes & Cabos', label: 'Redes & Cabos' },
+    { value: 'Automação', label: 'Automação' },
+    { value: 'Elétrica', label: 'Elétrica' },
+    { value: 'Suprimentos', label: 'Suprimentos' },
+  ];
+
+  const unidadeOptions: SelectOption[] = [
+    { value: 'UN', label: 'UN (Unidade)' },
+    { value: 'CX', label: 'CX (Caixa)' },
+    { value: 'PC', label: 'PC (Pacote/Peça)' },
+    { value: 'RL', label: 'RL (Rolo)' },
+    { value: 'KG', label: 'KG (Quilograma)' },
+  ];
 
   const filtered = produtos.filter((p) =>
     p.descricao.toLowerCase().includes(search.toLowerCase()) ||
@@ -84,42 +103,44 @@ export const ProdutosPage: React.FC<ProdutosProps> = ({ produtos, onRefresh }) =
         />
       </div>
 
-      {/* Tabela de Produtos */}
-      <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800 overflow-x-auto">
-        <table className="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr className="border-b border-zinc-800 text-zinc-400 text-[11px] font-bold uppercase">
-              <th className="py-2.5 px-3">Código</th>
-              <th className="py-2.5 px-3">Descrição do Item</th>
-              <th className="py-2.5 px-3">Categoria</th>
-              <th className="py-2.5 px-3">NCM</th>
-              <th className="py-2.5 px-3 text-center">Unid</th>
-              <th className="py-2.5 px-3 text-right">Custo</th>
-              <th className="py-2.5 px-3 text-right">Venda</th>
-              <th className="py-2.5 px-3 text-right">Estoque</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-800/60">
-            {filtered.map((prod) => (
-              <tr key={prod.id} className="hover:bg-zinc-800/30 transition">
-                <td className="py-2.5 px-3 font-mono font-bold text-white">{prod.codigo}</td>
-                <td className="py-2.5 px-3 font-semibold text-zinc-200">{prod.descricao}</td>
-                <td className="py-2.5 px-3 text-zinc-400">{prod.categoria}</td>
-                <td className="py-2.5 px-3 font-mono text-zinc-400">{prod.ncm}</td>
-                <td className="py-2.5 px-3 text-center text-zinc-300">{prod.unidade}</td>
-                <td className="py-2.5 px-3 text-right font-mono text-zinc-400">{formatCurrency(prod.preco_custo)}</td>
-                <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-400">{formatCurrency(prod.preco_venda)}</td>
-                <td className="py-2.5 px-3 text-right font-mono font-bold text-white">
-                  <span className={`px-2 py-0.5 rounded text-[11px] ${
-                    prod.estoque_atual < 15 ? 'bg-amber-500/20 text-amber-300' : 'bg-zinc-800 text-zinc-200'
-                  }`}>
-                    {prod.estoque_atual} un
-                  </span>
-                </td>
+      {/* TABELA COM ROLAGEM INTERNA E HEADER FIXO */}
+      <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shadow-lg">
+        <div className="max-h-[calc(100vh-280px)] overflow-x-auto overflow-y-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead className="sticky top-0 bg-[#16161a] z-10 border-b border-zinc-800 shadow-sm">
+              <tr className="text-zinc-400 text-[11px] font-bold uppercase">
+                <th className="py-3 px-3">Código</th>
+                <th className="py-3 px-3">Descrição do Item</th>
+                <th className="py-3 px-3">Categoria</th>
+                <th className="py-3 px-3">NCM</th>
+                <th className="py-3 px-3 text-center">Unid</th>
+                <th className="py-3 px-3 text-right">Custo</th>
+                <th className="py-3 px-3 text-right">Venda</th>
+                <th className="py-3 px-3 text-right">Estoque</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/60">
+              {filtered.map((prod) => (
+                <tr key={prod.id} className="hover:bg-zinc-800/30 transition">
+                  <td className="py-2.5 px-3 font-mono font-bold text-white">{prod.codigo}</td>
+                  <td className="py-2.5 px-3 font-semibold text-zinc-200">{prod.descricao}</td>
+                  <td className="py-2.5 px-3 text-zinc-400">{prod.categoria}</td>
+                  <td className="py-2.5 px-3 font-mono text-zinc-400">{prod.ncm}</td>
+                  <td className="py-2.5 px-3 text-center text-zinc-300 font-semibold">{prod.unidade}</td>
+                  <td className="py-2.5 px-3 text-right font-mono text-zinc-400">{formatCurrency(prod.preco_custo)}</td>
+                  <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-400">{formatCurrency(prod.preco_venda)}</td>
+                  <td className="py-2.5 px-3 text-right font-mono font-bold text-white">
+                    <span className={`px-2 py-0.5 rounded text-[11px] ${
+                      prod.estoque_atual < 15 ? 'bg-amber-500/20 text-amber-300' : 'bg-zinc-800 text-zinc-200'
+                    }`}>
+                      {prod.estoque_atual} un
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal Novo Produto */}
@@ -135,7 +156,7 @@ export const ProdutosPage: React.FC<ProdutosProps> = ({ produtos, onRefresh }) =
                     type="text"
                     value={formData.codigo}
                     onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-[#16161a] border border-[#27272a] rounded px-2.5 py-1.5 text-xs text-white"
                     placeholder="PRD-NOVO-01"
                     required
                   />
@@ -146,7 +167,7 @@ export const ProdutosPage: React.FC<ProdutosProps> = ({ produtos, onRefresh }) =
                     type="text"
                     value={formData.ncm}
                     onChange={(e) => setFormData({ ...formData, ncm: e.target.value })}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-[#16161a] border border-[#27272a] rounded px-2.5 py-1.5 text-xs text-white"
                     placeholder="8471.30.12"
                     required
                   />
@@ -159,10 +180,31 @@ export const ProdutosPage: React.FC<ProdutosProps> = ({ produtos, onRefresh }) =
                   type="text"
                   value={formData.descricao}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white"
+                  className="w-full bg-[#16161a] border border-[#27272a] rounded px-2.5 py-1.5 text-xs text-white"
                   placeholder="Nome detalhado do produto fiscal"
                   required
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Categoria</label>
+                  <SearchableSelect
+                    options={categoriaOptions}
+                    value={formData.categoria}
+                    onChange={(val) => setFormData({ ...formData, categoria: val })}
+                    searchPlaceholder="Buscar categoria..."
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Unidade</label>
+                  <SearchableSelect
+                    options={unidadeOptions}
+                    value={formData.unidade}
+                    onChange={(val) => setFormData({ ...formData, unidade: val })}
+                    searchPlaceholder="Buscar unidade..."
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -173,7 +215,7 @@ export const ProdutosPage: React.FC<ProdutosProps> = ({ produtos, onRefresh }) =
                     step="0.01"
                     value={formData.preco_custo}
                     onChange={(e) => setFormData({ ...formData, preco_custo: e.target.value })}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-[#16161a] border border-[#27272a] rounded px-2.5 py-1.5 text-xs text-white"
                     required
                   />
                 </div>
@@ -184,7 +226,7 @@ export const ProdutosPage: React.FC<ProdutosProps> = ({ produtos, onRefresh }) =
                     step="0.01"
                     value={formData.preco_venda}
                     onChange={(e) => setFormData({ ...formData, preco_venda: e.target.value })}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-[#16161a] border border-[#27272a] rounded px-2.5 py-1.5 text-xs text-white"
                     required
                   />
                 </div>
@@ -194,7 +236,7 @@ export const ProdutosPage: React.FC<ProdutosProps> = ({ produtos, onRefresh }) =
                     type="number"
                     value={formData.estoque_atual}
                     onChange={(e) => setFormData({ ...formData, estoque_atual: e.target.value })}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-[#16161a] border border-[#27272a] rounded px-2.5 py-1.5 text-xs text-white"
                     required
                   />
                 </div>

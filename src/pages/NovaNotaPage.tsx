@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { Produto, Parceiro, NotaItem } from '../types';
 import { formatCurrency } from '../lib/utils';
+import { SearchableSelect, SelectOption } from '../components/ui/SearchableSelect';
 import confetti from 'canvas-confetti';
 import { 
   Plus, 
   Trash2, 
   Sparkles, 
-  Calculator, 
-  Send, 
   Package, 
   Building, 
-  Calendar, 
-  CreditCard,
-  CheckCircle
+  ArrowRightLeft,
+  Calendar,
+  CreditCard
 } from 'lucide-react';
 
 interface NovaNotaProps {
@@ -55,6 +54,52 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
       aliq_ipi: 0,
     },
   ]);
+
+  // Opções para SearchableSelect de Tipo de Operação
+  const tipoOperacaoOptions: SelectOption[] = [
+    { 
+      value: 'SAIDA', 
+      label: '1 - Saída (Venda / Faturamento)', 
+      sublabel: 'Emissão para clientes ou saídas de mercadorias',
+      badge: 'SAÍDA',
+      badgeColor: 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+    },
+    { 
+      value: 'ENTRADA', 
+      label: '0 - Entrada (Compra / Devolução)', 
+      sublabel: 'Aquisição de produtos de fornecedores ou devoluções',
+      badge: 'ENTRADA',
+      badgeColor: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+    },
+  ];
+
+  // Opções para Parcelamento
+  const parcelasOptions: SelectOption[] = [
+    { value: 1, label: '1x (À Vista)', sublabel: 'Pagamento imediato na emissão', badge: 'À Vista' },
+    { value: 2, label: '2x (30 / 60 dias)', sublabel: 'Duas parcelas iguais em boleto', badge: '2x' },
+    { value: 3, label: '3x (30 / 60 / 90 dias)', sublabel: 'Três parcelas quinzenais/mensais', badge: '3x' },
+    { value: 4, label: '4x (30 / 60 / 90 / 120 dias)', sublabel: 'Quatro parcelas mensais', badge: '4x' },
+  ];
+
+  // Opções de Parceiros
+  const parceiroOptions: SelectOption[] = parceiros.map((p) => ({
+    value: p.id,
+    label: `${p.nome_fantasia}`,
+    sublabel: `${p.razao_social} • ${p.municipio}/${p.uf}`,
+    badge: p.cnpj,
+    badgeColor: p.tipo === 'FORNECEDOR' 
+      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' 
+      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+  }));
+
+  // Opções de Produtos para a Tabela
+  const produtoOptions: SelectOption[] = produtos.map((p) => ({
+    value: p.id,
+    label: p.descricao,
+    sublabel: `Cód: ${p.codigo} | NCM: ${p.ncm} | Venda: ${formatCurrency(p.preco_venda)}`,
+    badge: `Estoque: ${p.estoque_atual} ${p.unidade}`,
+    badgeColor: p.estoque_atual < 15 ? 'bg-amber-500/20 text-amber-300' : 'bg-zinc-800 text-zinc-300'
+  }));
 
   const handleAddItem = () => {
     const prod = produtos[0];
@@ -168,7 +213,6 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
 
       const created = await res.json();
 
-      // Disparar confetes festivos
       confetti({
         particleCount: 120,
         spread: 80,
@@ -221,20 +265,17 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
             <label className="text-[11px] font-bold text-zinc-400 uppercase block mb-1">
               Tipo de Operação
             </label>
-            <select
+            <SearchableSelect
+              options={tipoOperacaoOptions}
               value={tipoOperacao}
-              onChange={(e) => {
-                const val = e.target.value as 'ENTRADA' | 'SAIDA';
+              onChange={(val) => {
                 setTipoOperacao(val);
                 setNaturezaOperacao(
                   val === 'SAIDA' ? 'VENDA DE MERCADORIAS E PRODUTOS' : 'COMPRA PARA COMERCIALIZACAO E REVENDA'
                 );
               }}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              <option value="SAIDA">1 - Saída (Venda / Faturamento)</option>
-              <option value="ENTRADA">0 - Entrada (Compra / Devolução)</option>
-            </select>
+              searchPlaceholder="Filtrar tipo de operação..."
+            />
           </div>
 
           <div>
@@ -245,7 +286,7 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
               type="text"
               value={numeroNf}
               onChange={(e) => setNumeroNf(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-mono font-bold text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full bg-[#16161a] border border-[#27272a] rounded-lg px-3 py-2 text-xs font-mono font-bold text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/80 outline-none transition"
               required
             />
           </div>
@@ -258,7 +299,7 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
               type="text"
               value={serie}
               onChange={(e) => setSerie(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-mono font-bold text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full bg-[#16161a] border border-[#27272a] rounded-lg px-3 py-2 text-xs font-mono font-bold text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/80 outline-none transition"
               required
             />
           </div>
@@ -267,16 +308,12 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
             <label className="text-[11px] font-bold text-zinc-400 uppercase block mb-1">
               Parcelamento / Fatura
             </label>
-            <select
+            <SearchableSelect
+              options={parcelasOptions}
               value={parcelas}
-              onChange={(e) => setParcelas(Number(e.target.value))}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              <option value="1">1x (À Vista)</option>
-              <option value="2">2x (30 / 60 dias)</option>
-              <option value="3">3x (30 / 60 / 90 dias)</option>
-              <option value="4">4x (30 / 60 / 90 / 120 dias)</option>
-            </select>
+              onChange={(val) => setParcelas(Number(val))}
+              searchPlaceholder="Filtrar parcelamento..."
+            />
           </div>
         </div>
 
@@ -285,34 +322,26 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
             <label className="text-[11px] font-bold text-zinc-400 uppercase block mb-1">
               Emitente (Empresa Vendedora / Origem)
             </label>
-            <select
+            <SearchableSelect
+              options={parceiroOptions}
               value={emitenteId}
-              onChange={(e) => setEmitenteId(Number(e.target.value))}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              {parceiros.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome_fantasia} ({p.cnpj}) - {p.municipio}/{p.uf}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setEmitenteId(Number(val))}
+              placeholder="Selecione o emitente..."
+              searchPlaceholder="Buscar por nome, razão social ou CNPJ..."
+            />
           </div>
 
           <div>
             <label className="text-[11px] font-bold text-zinc-400 uppercase block mb-1">
               Destinatário (Cliente / Comprador)
             </label>
-            <select
+            <SearchableSelect
+              options={parceiroOptions}
               value={destinatarioId}
-              onChange={(e) => setDestinatarioId(Number(e.target.value))}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              {parceiros.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome_fantasia} ({p.cnpj}) - {p.municipio}/{p.uf}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setDestinatarioId(Number(val))}
+              placeholder="Selecione o destinatário..."
+              searchPlaceholder="Buscar por nome, razão social ou CNPJ..."
+            />
           </div>
         </div>
 
@@ -324,19 +353,24 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
             type="text"
             value={naturezaOperacao}
             onChange={(e) => setNaturezaOperacao(e.target.value)}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full bg-[#16161a] border border-[#27272a] rounded-lg px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/80 outline-none transition"
             required
           />
         </div>
       </div>
 
-      {/* Tabela de Produtos & Serviços */}
+      {/* Tabela de Produtos & Serviços COM ROLAGEM INTERNA Coss UI */}
       <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Package className="w-4 h-4 text-emerald-400" />
-            Itens e Produtos da Nota Fiscal
-          </h3>
+          <div>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Package className="w-4 h-4 text-emerald-400" />
+              Itens e Produtos da Nota Fiscal
+            </h3>
+            <p className="text-[11px] text-zinc-400">
+              Selecione itens via campo de busca com rolagem interna independente
+            </p>
+          </div>
           <button
             type="button"
             onClick={handleAddItem}
@@ -346,55 +380,52 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* CONTAINER COM ROLAGEM INTERNA E CABEÇALHO FIXO (STICKY) */}
+        <div className="max-h-[380px] overflow-x-auto overflow-y-auto rounded-xl border border-zinc-800/80 bg-[#121215]">
           <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-zinc-800 text-zinc-400 text-[11px] font-bold uppercase">
-                <th className="py-2 px-2">Produto do Catálogo</th>
-                <th className="py-2 px-2 w-24">NCM</th>
-                <th className="py-2 px-2 w-16 text-center">Unid</th>
-                <th className="py-2 px-2 w-20 text-right">Qtd</th>
-                <th className="py-2 px-2 w-28 text-right">Vlr Unit</th>
-                <th className="py-2 px-2 w-28 text-right">Total</th>
-                <th className="py-2 px-2 w-24 text-right">ICMS</th>
-                <th className="py-2 px-2 w-10 text-center">Remover</th>
+            <thead className="sticky top-0 bg-[#16161a] z-20 shadow-md border-b border-zinc-800">
+              <tr className="text-zinc-400 text-[11px] font-bold uppercase">
+                <th className="py-2.5 px-3 min-w-[340px]">Produto do Catálogo (Select Search)</th>
+                <th className="py-2.5 px-2 w-28">NCM</th>
+                <th className="py-2.5 px-2 w-16 text-center">Unid</th>
+                <th className="py-2.5 px-2 w-20 text-right">Qtd</th>
+                <th className="py-2.5 px-3 w-28 text-right">Vlr Unit</th>
+                <th className="py-2.5 px-3 w-28 text-right">Total</th>
+                <th className="py-2.5 px-3 w-28 text-right">ICMS</th>
+                <th className="py-2.5 px-2 w-10 text-center">Remover</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/60">
               {itens.map((item, idx) => (
-                <tr key={idx} className="hover:bg-zinc-800/30">
-                  <td className="py-2 px-2">
-                    <select
-                      value={item.produto_id || ''}
-                      onChange={(e) => handleProductSelect(idx, Number(e.target.value))}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-zinc-200"
-                    >
-                      {produtos.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.codigo} - {p.descricao} (Estoque: {p.estoque_atual})
-                        </option>
-                      ))}
-                    </select>
+                <tr key={idx} className="hover:bg-zinc-800/30 transition">
+                  <td className="py-2 px-3">
+                    <SearchableSelect
+                      options={produtoOptions}
+                      value={item.produto_id || undefined}
+                      onChange={(val) => handleProductSelect(idx, Number(val))}
+                      placeholder="Buscar produto no catálogo..."
+                      searchPlaceholder="Digite nome, código ou NCM..."
+                    />
                   </td>
-                  <td className="py-2 px-2 font-mono text-zinc-400">{item.ncm}</td>
-                  <td className="py-2 px-2 text-center text-zinc-300">{item.unidade}</td>
+                  <td className="py-2 px-2 font-mono text-zinc-400 text-xs">{item.ncm}</td>
+                  <td className="py-2 px-2 text-center text-zinc-300 font-semibold">{item.unidade}</td>
                   <td className="py-2 px-2 text-right">
                     <input
                       type="number"
                       min="1"
                       value={item.quantidade}
                       onChange={(e) => handleQuantityChange(idx, Number(e.target.value))}
-                      className="w-16 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-right text-xs font-mono font-bold text-white"
+                      className="w-16 bg-[#16161a] border border-[#27272a] rounded px-2 py-1 text-right text-xs font-mono font-bold text-white focus:ring-1 focus:ring-blue-500 outline-none"
                     />
                   </td>
-                  <td className="py-2 px-2 text-right font-mono text-zinc-300">
+                  <td className="py-2 px-3 text-right font-mono text-zinc-300">
                     {formatCurrency(item.valor_unitario)}
                   </td>
-                  <td className="py-2 px-2 text-right font-mono font-bold text-white">
+                  <td className="py-2 px-3 text-right font-mono font-bold text-white">
                     {formatCurrency(item.valor_total)}
                   </td>
-                  <td className="py-2 px-2 text-right font-mono text-emerald-400">
-                    {formatCurrency(item.valor_icms)} ({item.aliq_icms}%)
+                  <td className="py-2 px-3 text-right font-mono text-emerald-400">
+                    {formatCurrency(item.valor_icms)} <span className="text-[10px] text-zinc-400">({item.aliq_icms}%)</span>
                   </td>
                   <td className="py-2 px-2 text-center">
                     <button
@@ -402,6 +433,7 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
                       onClick={() => handleRemoveItem(idx)}
                       disabled={itens.length === 1}
                       className="p-1 rounded text-zinc-500 hover:text-red-400 disabled:opacity-30 transition"
+                      title="Remover Item"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

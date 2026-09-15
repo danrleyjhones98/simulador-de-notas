@@ -226,7 +226,7 @@ export const DashboardPage: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Tabela de Últimas Notas */}
+      {/* Tabela de Últimas Notas com ROLAGEM INTERNA */}
       <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -241,10 +241,10 @@ export const DashboardPage: React.FC<DashboardProps> = ({
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="max-h-[320px] overflow-x-auto overflow-y-auto rounded-xl border border-zinc-800/80 bg-[#121215]">
           <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-zinc-800 text-zinc-400 text-[11px] font-bold uppercase">
+            <thead className="sticky top-0 bg-[#16161a] z-10 border-b border-zinc-800 shadow-sm">
+              <tr className="text-zinc-400 text-[11px] font-bold uppercase">
                 <th className="py-2.5 px-3">Número</th>
                 <th className="py-2.5 px-3">Tipo</th>
                 <th className="py-2.5 px-3">Emitente</th>
@@ -256,7 +256,7 @@ export const DashboardPage: React.FC<DashboardProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/60">
-              {notas.slice(0, 5).map((nota) => (
+              {notas.slice(0, 8).map((nota) => (
                 <tr key={nota.id} className="hover:bg-zinc-800/40 transition">
                   <td className="py-2.5 px-3 font-mono font-bold text-white">Nº {nota.numero_nf}</td>
                   <td className="py-2.5 px-3">

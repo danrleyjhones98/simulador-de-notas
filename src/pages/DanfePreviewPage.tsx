@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NotaFiscal } from '../types';
 import { DanfeDocument } from '../components/danfe/DanfeDocument';
+import { SearchableSelect, SelectOption } from '../components/ui/SearchableSelect';
 import { FileText, ArrowLeft } from 'lucide-react';
 
 interface DanfePreviewProps {
@@ -19,6 +20,14 @@ export const DanfePreviewPage: React.FC<DanfePreviewProps> = ({
 
   const activeNota = notas.find((n) => n.id === currentId) || defaultNota;
 
+  const notaOptions: SelectOption[] = notas.map((n) => ({
+    value: n.id,
+    label: `NF-e Nº ${n.numero_nf} - ${n.emitente_fantasia || n.emitente_nome}`,
+    sublabel: `Destinatário: ${n.destinatario_fantasia || n.destinatario_nome} • R$ ${Number(n.valor_total).toFixed(2)}`,
+    badge: n.status,
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+  }));
+
   if (!activeNota) {
     return (
       <div className="p-12 text-center text-zinc-400 space-y-4">
@@ -36,22 +45,28 @@ export const DanfePreviewPage: React.FC<DanfePreviewProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Seletor de Nota (no-print) */}
+      {/* Seletor com SearchableSelect (no-print) */}
       <div className="no-print flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-zinc-400 uppercase">Selecionar Nota Fiscal:</span>
-          <select
-            value={currentId}
-            onChange={(e) => setCurrentId(Number(e.target.value))}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:ring-2 focus:ring-blue-500 outline-none"
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium transition shrink-0"
           >
-            {notas.map((n) => (
-              <option key={n.id} value={n.id}>
-                NF-e Nº {n.numero_nf} - {n.emitente_fantasia || n.emitente_nome} ({n.status})
-              </option>
-            ))}
-          </select>
+            <ArrowLeft className="w-3.5 h-3.5" /> Voltar
+          </button>
+          <div className="w-full sm:w-96">
+            <SearchableSelect
+              options={notaOptions}
+              value={currentId}
+              onChange={(val) => setCurrentId(Number(val))}
+              placeholder="Selecionar nota fiscal..."
+              searchPlaceholder="Buscar por número, fornecedor ou cliente..."
+            />
+          </div>
         </div>
+        <p className="text-xs text-zinc-400">
+          Visualizando registro oficial do PostgreSQL 16
+        </p>
       </div>
 
       {/* Renderização do DANFE SEFAZ Oficial */}
