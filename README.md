@@ -1,76 +1,71 @@
-﻿# 📊 Simulador de Lançamento de Notas Fiscais
+# Simulador de Notas Fiscais & Emissor DANFE SEFAZ
 
-Aplicação interativa desenvolvida com **Next.js**, **React** e **Tailwind CSS** para simular operações fiscais, cálculo de estoque e planejamento financeiro de notas de entrada e saída.
+Sistema completo para emissão, cálculo fiscal e impressão em PDF de Documentos Auxiliares da Nota Fiscal Eletrônica (**DANFE** padrão SEFAZ), operando com **PostgreSQL verdadeiro**, arquitetura moderna baseada em **React + Vite**, design tokens **Coss UI** e componentes **Shadcn**.
 
 ---
 
-## 🚀 Como Executar o Projeto
+## 🚀 Tecnologias Utilizadas
 
-### Opção 1: Inicialização Rápida (Recomendado no Windows)
-Basta dar um **duplo clique** no arquivo:
-```
+- **Frontend**: [React 18](https://react.dev/) + [Vite](https://vitejs.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Design System & Estilização**: [Coss UI](https://coss.com/ui) + [Tailwind CSS](https://tailwindcss.com/) + Padrões [Shadcn UI](https://ui.shadcn.com/)
+- **Organização por Sidebar**: Menu lateral com navegação fluida por abas (Dashboard, Emissão, DANFE, Produtos, Parceiros e Histórico).
+- **Banco de Dados Real (SQL)**: [PostgreSQL 16 (PGlite)](https://pglite.dev/) com DDL nativo (`CREATE TABLE`, `INSERT`, `UPDATE`, chaves estrangeiras, índices e transações) persistido em disco local (`./data/pgdata`).
+- **Servidor Backend**: [Express](https://expressjs.com/) integrado rodando consultas SQL parametrizadas na porta 3001 com proxy no Vite.
+- **Simulação DANFE SEFAZ Oficial**:
+  - Layout fidedigno ao Manual de Integração do Contribuinte (MOC Anexo II da SEFAZ).
+  - Canhoto de recebimento com picote tracejado.
+  - Código de barras CODE-128 e Chave de Acesso de 44 dígitos autêntica (com cálculo de DV módulo 11).
+  - Impressão otimizada em folha A4 (`@media print`) para geração direta de PDF oficial pelo navegador.
+  - Exportação em XML oficial da NF-e.
+
+---
+
+## 🏛️ Estrutura do Banco de Dados Relacional (PostgreSQL)
+
+O banco de dados utiliza tabelas relacionais verdadeiras com chaves primárias e estrangeiras:
+
+1. `parceiros`: Cadastro de Fornecedores e Clientes (Razão Social, Nome Fantasia, CNPJ, Inscrição Estadual, Endereço completo e Contato).
+2. `produtos`: Catálogo fiscal com NCM, Unidade (UN, CX, PC, RL), Preço de Custo, Preço de Venda, Estoque Atual e Alíquotas de ICMS/IPI.
+3. `notas_fiscais`: Cabeçalho da NF-e com Chave de Acesso, Protocolo SEFAZ, Totais, Frete, Tributos e Status.
+4. `nota_itens`: Itens vinculados à nota fiscal com CST, CFOP, NCM, quantidades, valores e alíquotas.
+5. `duplicatas`: Parcelamento de faturas (1x à vista até parcelamentos em boletos com datas de vencimento).
+
+---
+
+## 📦 Como Executar
+
+### 1. Inicialização Automática (Windows)
+Basta dar um duplo clique no arquivo:
+```cmd
 iniciar.bat
 ```
-> O script verifica se o Node.js está instalado (e auxilia na instalação se necessário), instala as dependências caso ainda não existam e abre o navegador automaticamente em `http://localhost:3000`.
+O script irá validar o ambiente, instalar dependências se necessário e abrir o navegador automaticamente em `http://localhost:3000`.
 
----
+### 2. Linha de Comando
+```bash
+# 1. Instalar dependências
+npm install
 
-### Opção 2: Pelo Terminal (VS Code / PowerShell)
+# 2. Executar carga inicial do PostgreSQL (opcional, executado automaticamente)
+npm run seed
 
-1. Abra a pasta do projeto no seu terminal ou editor:
-   ```bash
-   cd "C:\Users\Lucas\Documents\dev\simulador-de-notas"
-   ```
-
-2. Instale as dependências (caso seja necessário):
-   ```bash
-   npm install
-   ```
-
-3. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-
-4. Acesse no navegador:
-   ```
-   http://localhost:3000
-   ```
-
----
-
-## 📁 Estrutura de Arquivos
-
-```
-simulador-de-notas/
-├── app/
-│   ├── globals.css         # Estilos globais e diretivas do Tailwind CSS
-│   ├── layout.tsx          # Layout base da aplicação
-│   └── page.tsx            # Interface e lógica do simulador de notas
-├── .gitignore              # Lista de arquivos/pastas ignorados no versionamento
-├── iniciar.bat             # Inicializador automático para Windows
-├── next.config.mjs         # Configurações do framework Next.js
-├── package.json            # Dependências e scripts do projeto
-├── postcss.config.js       # Configuração do compilador PostCSS
-├── README.md               # Esta documentação
-├── tailwind.config.ts      # Tokens e utilitários de estilo Tailwind
-└── tsconfig.json           # Configurações do TypeScript
+# 3. Iniciar servidor frontend Vite e backend SQL simultaneamente
+npm run dev
 ```
 
----
-
-## 🛠️ Tecnologias Utilizadas
-
-- **[Next.js 14](https://nextjs.org/)** (App Router)
-- **[React 18](https://react.dev/)**
-- **[TypeScript](https://www.typescriptlang.org/)**
-- **[Tailwind CSS](https://tailwindcss.com/)**
+Acesse no seu navegador: **http://localhost:3000**
 
 ---
 
-## 💡 Recursos do Simulador
+## 📄 Funcionalidades
 
-- **Operações Fiscais**: Alternância rápida entre notas de Entrada (Compra) e Saída (Venda).
-- **Controle de Produtos**: Inclusão dinâmica de itens com cálculo automático de subtotal e total da nota.
-- **Módulo Financeiro**: Lançamento direto ou divisão em parcelas com datas de vencimento e formas de pagamento (Boleto, Pix, Cartão, etc.).
-- **Integração Pronta**: Geração de payload pronto para envio a APIs ou sistemas ERP.
+- **Dashboard Geral**: Indicadores financeiros de faturamento, volume de notas emitidas, controle de entradas vs saídas e itens em estoque.
+- **Emissor de NF-e**: Formulário dinâmico com seleção de fornecedores/clientes, inserção dinâmica de produtos, cálculo automático de impostos (ICMS e IPI) e geração de parcelamento.
+- **Visualizador DANFE SEFAZ & PDF**: Visualização no formato oficial da SEFAZ com botão para impressão e download de PDF em folha A4 perfeita.
+- **Catálogo de Produtos**: Gestão com adição de novos produtos diretamente no banco PostgreSQL.
+- **Gestão de Parceiros**: Fornecedores renomados (Dell, Furukawa, Schneider, LG, MegaSuprimentos, OmniSensors) e Clientes.
+- **Histórico**: Busca e filtragem de notas fiscais com visualização rápida de DANFE e download de XML.
+
+---
+
+Desenvolvido com foco em alta performance, robustez fiscal e estética moderna.
