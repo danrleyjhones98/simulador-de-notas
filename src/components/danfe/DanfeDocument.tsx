@@ -42,6 +42,35 @@ export const DanfeDocument: React.FC<DanfeDocumentProps> = ({ nota, onBack }) =>
         <CNPJ>${(nota.destinatario?.cnpj || nota.destinatario_cnpj || '').replace(/\D/g, '')}</CNPJ>
         <xNome>${nota.destinatario?.razao_social || nota.destinatario_nome}</xNome>
       </dest>
+      ${(nota.itens || []).map((it, idx) => `
+      <det nItem="${idx + 1}">
+        <prod>
+          <cProd>${it.codigo}</cProd>
+          <xProd>${it.descricao}</xProd>
+          <NCM>${(it.ncm || '').replace(/\D/g, '')}</NCM>
+          <CFOP>${(it.cfop || '').replace(/\D/g, '')}</CFOP>
+          <uCom>${it.unidade}</uCom>
+          <qCom>${Number(it.quantidade).toFixed(4)}</qCom>
+          <vUnCom>${Number(it.valor_unitario).toFixed(4)}</vUnCom>
+          <vProd>${Number(it.valor_total).toFixed(2)}</vProd>
+          <uTrib>${it.unidade}</uTrib>
+          <qTrib>${Number(it.quantidade).toFixed(4)}</qTrib>
+          <vUnTrib>${Number(it.valor_unitario).toFixed(4)}</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>${it.cst || '000'}</CST>
+              <modBC>3</modBC>
+              <vBC>${Number(it.base_calculo_icms).toFixed(2)}</vBC>
+              <pICMS>${Number(it.aliq_icms).toFixed(2)}</pICMS>
+              <vICMS>${Number(it.valor_icms).toFixed(2)}</vICMS>
+            </ICMS00>
+          </ICMS>
+        </imposto>
+      </det>`).join('')}
       <total>
         <ICMSTot>
           <vBC>${Number(nota.base_calculo_icms).toFixed(2)}</vBC>

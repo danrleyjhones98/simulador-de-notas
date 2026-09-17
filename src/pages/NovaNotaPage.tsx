@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Produto, Parceiro, NotaItem } from '../types';
 import { formatCurrency } from '../lib/utils';
 import { SearchableSelect, SelectOption } from '../components/ui/SearchableSelect';
@@ -29,31 +29,76 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
   const [numeroNf, setNumeroNf] = useState(`000.0${Math.floor(10000 + Math.random() * 90000)}`);
   const [serie, setSerie] = useState('1');
   const [naturezaOperacao, setNaturezaOperacao] = useState('VENDA DE MERCADORIAS E PRODUTOS');
-  const [emitenteId, setEmitenteId] = useState<number>(parceiros[0]?.id || 1);
-  const [destinatarioId, setDestinatarioId] = useState<number>(parceiros[parceiros.length - 1]?.id || 2);
+  const [emitenteId, setEmitenteId] = useState<number>(() => parceiros[0]?.id || 1);
+  const [destinatarioId, setDestinatarioId] = useState<number>(() => parceiros[parceiros.length - 1]?.id || 2);
   const [parcelas, setParcelas] = useState(2);
   const [loading, setLoading] = useState(false);
 
+  // Sincroniza parceiros quando carregarem
+  useEffect(() => {
+    if (parceiros.length > 0) {
+      if (!emitenteId || !parceiros.some(p => p.id === emitenteId)) {
+        setEmitenteId(parceiros[0].id);
+      }
+      if (!destinatarioId || !parceiros.some(p => p.id === destinatarioId)) {
+        setDestinatarioId(parceiros[parceiros.length - 1].id);
+      }
+    }
+  }, [parceiros]);
+
   // Itens da nota
-  const [itens, setItens] = useState<NotaItem[]>([
-    {
-      produto_id: produtos[0]?.id || null,
-      codigo: produtos[0]?.codigo || 'PRD-01',
-      descricao: produtos[0]?.descricao || 'Item Selecionado',
-      ncm: produtos[0]?.ncm || '8471.30.12',
-      cst: '000',
-      cfop: '5.102',
-      unidade: produtos[0]?.unidade || 'UN',
-      quantidade: 2,
-      valor_unitario: Number(produtos[0]?.preco_venda || 100),
-      valor_total: 2 * Number(produtos[0]?.preco_venda || 100),
-      base_calculo_icms: 2 * Number(produtos[0]?.preco_venda || 100),
-      valor_icms: (2 * Number(produtos[0]?.preco_venda || 100) * 18) / 100,
-      aliq_icms: 18,
-      valor_ipi: 0,
-      aliq_ipi: 0,
-    },
-  ]);
+  const [itens, setItens] = useState<NotaItem[]>(() => {
+    const p = produtos[0];
+    const unitPrice = Number(p?.preco_venda || 100);
+    return [
+      {
+        produto_id: p?.id || null,
+        codigo: p?.codigo || 'PRD-NOTE-01',
+        descricao: p?.descricao || 'Produto Selecionado',
+        ncm: p?.ncm || '8471.30.12',
+        cst: '000',
+        cfop: '5.102',
+        unidade: p?.unidade || 'UN',
+        quantidade: 2,
+        valor_unitario: unitPrice,
+        valor_total: 2 * unitPrice,
+        base_calculo_icms: 2 * unitPrice,
+        valor_icms: (2 * unitPrice * 18) / 100,
+        aliq_icms: 18,
+        valor_ipi: 0,
+        aliq_ipi: 0,
+      },
+    ];
+  });
+
+  // Sincroniza primeiro produto se inicializou vazio
+  useEffect(() => {
+    if (produtos.length > 0 && itens.length === 1 && !itens[0].produto_id) {
+      const p = produtos[0];
+      const unitPrice = tipoOperacao === 'ENTRADA' ? Number(p.preco_custo) : Number(p.preco_venda);
+      const qtd = itens[0].quantidade || 1;
+      const tot = qtd * unitPrice;
+      const icms = (tot * Number(p.aliq_icms || 18)) / 100;
+      const ipi = (tot * Number(p.aliq_ipi || 0)) / 100;
+      setItens([{
+        produto_id: p.id,
+        codigo: p.codigo,
+        descricao: p.descricao,
+        ncm: p.ncm,
+        cst: '000',
+        cfop: tipoOperacao === 'SAIDA' ? '5.102' : '1.102',
+        unidade: p.unidade,
+        quantidade: qtd,
+        valor_unitario: unitPrice,
+        valor_total: tot,
+        base_calculo_icms: tot,
+        valor_icms: icms,
+        aliq_icms: Number(p.aliq_icms || 18),
+        valor_ipi: ipi,
+        aliq_ipi: Number(p.aliq_ipi || 0),
+      }]);
+    }
+  }, [produtos]);
 
   // Opções para SearchableSelect de Tipo de Operação
   const tipoOperacaoOptions: SelectOption[] = [
@@ -101,8 +146,39 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
     badgeColor: p.estoque_atual < 15 ? 'bg-amber-500/20 text-amber-300' : 'bg-zinc-800 text-zinc-300'
   }));
 
+  const handleTipoOperacaoChange = (newTipo: 'ENTRADA' | 'SAIDA') => {
+    setTipoOperacao(newTipo);
+    setNaturezaOperacao(
+      newTipo === 'SAIDA' ? 'VENDA DE MERCADORIAS E PRODUTOS' : 'COMPRA PARA COMERCIALIZACAO E REVENDA'
+    );
+    const newCfop = newTipo === 'SAIDA' ? '5.102' : '1.102';
+    setItens((prev) =>
+      prev.map((it) => {
+        const prod = produtos.find((p) => p.id === it.produto_id);
+        const unitPrice = prod
+          ? (newTipo === 'ENTRADA' ? Number(prod.preco_custo) : Number(prod.preco_venda))
+          : it.valor_unitario;
+        const tot = (it.quantidade || 1) * unitPrice;
+        const icms = (tot * (it.aliq_icms || 18)) / 100;
+        const ipi = (tot * (it.aliq_ipi || 0)) / 100;
+        return {
+          ...it,
+          cfop: newCfop,
+          valor_unitario: unitPrice,
+          valor_total: tot,
+          base_calculo_icms: tot,
+          valor_icms: icms,
+          valor_ipi: ipi,
+        };
+      })
+    );
+  };
+
   const handleAddItem = () => {
-    const prod = produtos[0];
+    const prod = produtos[itens.length % (produtos.length || 1)] || produtos[0];
+    const unitPrice = prod
+      ? (tipoOperacao === 'ENTRADA' ? Number(prod.preco_custo) : Number(prod.preco_venda))
+      : 50;
     const newItem: NotaItem = {
       produto_id: prod?.id || null,
       codigo: prod?.codigo || `PRD-${itens.length + 1}`,
@@ -112,13 +188,13 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
       cfop: tipoOperacao === 'SAIDA' ? '5.102' : '1.102',
       unidade: prod?.unidade || 'UN',
       quantidade: 1,
-      valor_unitario: Number(prod?.preco_venda || 50),
-      valor_total: Number(prod?.preco_venda || 50),
-      base_calculo_icms: Number(prod?.preco_venda || 50),
-      valor_icms: (Number(prod?.preco_venda || 50) * 18) / 100,
-      aliq_icms: 18,
-      valor_ipi: 0,
-      aliq_ipi: 0,
+      valor_unitario: unitPrice,
+      valor_total: unitPrice,
+      base_calculo_icms: unitPrice,
+      valor_icms: (unitPrice * Number(prod?.aliq_icms || 18)) / 100,
+      aliq_icms: Number(prod?.aliq_icms || 18),
+      valor_ipi: (unitPrice * Number(prod?.aliq_ipi || 0)) / 100,
+      aliq_ipi: Number(prod?.aliq_ipi || 0),
     };
     setItens([...itens, newItem]);
   };
@@ -174,6 +250,24 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
     setItens(updated);
   };
 
+  const handleUnitPriceChange = (index: number, vu: number) => {
+    const updated = [...itens];
+    const q = updated[index].quantidade || 1;
+    const tot = q * vu;
+    const icms = (tot * updated[index].aliq_icms) / 100;
+    const ipi = (tot * updated[index].aliq_ipi) / 100;
+
+    updated[index] = {
+      ...updated[index],
+      valor_unitario: vu,
+      valor_total: tot,
+      base_calculo_icms: tot,
+      valor_icms: icms,
+      valor_ipi: ipi,
+    };
+    setItens(updated);
+  };
+
   // Cálculos consolidados
   const totalProdutos = itens.reduce((acc, curr) => acc + (curr.valor_total || 0), 0);
   const totalIcms = itens.reduce((acc, curr) => acc + (curr.valor_icms || 0), 0);
@@ -218,6 +312,9 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
         spread: 80,
         origin: { y: 0.6 },
       });
+
+      // Gera novo número para próxima emissão
+      setNumeroNf(`000.0${Math.floor(10000 + Math.random() * 90000)}`);
 
       onNotaCreated(created.id);
     } catch (err: any) {
@@ -268,12 +365,7 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
             <SearchableSelect
               options={tipoOperacaoOptions}
               value={tipoOperacao}
-              onChange={(val) => {
-                setTipoOperacao(val);
-                setNaturezaOperacao(
-                  val === 'SAIDA' ? 'VENDA DE MERCADORIAS E PRODUTOS' : 'COMPRA PARA COMERCIALIZACAO E REVENDA'
-                );
-              }}
+              onChange={(val) => handleTipoOperacaoChange(val as 'ENTRADA' | 'SAIDA')}
               searchPlaceholder="Filtrar tipo de operação..."
             />
           </div>
@@ -418,8 +510,15 @@ export const NovaNotaPage: React.FC<NovaNotaProps> = ({
                       className="w-16 bg-[#16161a] border border-[#27272a] rounded px-2 py-1 text-right text-xs font-mono font-bold text-white focus:ring-1 focus:ring-blue-500 outline-none"
                     />
                   </td>
-                  <td className="py-2 px-3 text-right font-mono text-zinc-300">
-                    {formatCurrency(item.valor_unitario)}
+                  <td className="py-2 px-3 text-right">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={item.valor_unitario}
+                      onChange={(e) => handleUnitPriceChange(idx, Number(e.target.value))}
+                      className="w-24 bg-[#16161a] border border-[#27272a] rounded px-2 py-1 text-right text-xs font-mono font-semibold text-zinc-200 focus:ring-1 focus:ring-blue-500 outline-none"
+                    />
                   </td>
                   <td className="py-2 px-3 text-right font-mono font-bold text-white">
                     {formatCurrency(item.valor_total)}

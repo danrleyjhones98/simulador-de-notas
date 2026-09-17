@@ -45,7 +45,18 @@ app.post('/api/produtos', async (req, res) => {
       INSERT INTO produtos (codigo, descricao, categoria, unidade, preco_custo, preco_venda, estoque_atual, ncm, aliq_icms, aliq_ipi)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
-    `, [codigo, descricao, categoria, unidade || 'UN', preco_custo, preco_venda, estoque_atual || 0, ncm || '0000.00.00', aliq_icms || 18, aliq_ipi || 0]);
+    `, [
+      codigo,
+      descricao,
+      categoria,
+      unidade || 'UN',
+      Number(preco_custo),
+      Number(preco_venda),
+      parseInt(String(estoque_atual || 0), 10),
+      ncm || '0000.00.00',
+      Number(aliq_icms || 18),
+      Number(aliq_ipi || 0)
+    ]);
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -58,10 +69,27 @@ app.put('/api/produtos/:id', async (req, res) => {
     const { codigo, descricao, categoria, unidade, preco_custo, preco_venda, estoque_atual, ncm, aliq_icms, aliq_ipi } = req.body;
     const result = await query(`
       UPDATE produtos
-      SET codigo = $1, descricao = $2, categoria = $3, unidade = $4, preco_custo = $5, preco_venda = $6, estoque_atual = $7, ncm = $8, aliq_icms = $9, aliq_ipi = $10
+      SET codigo = $1, descricao = $2, categoria = $3, unidade = $4, 
+          preco_custo = $5, preco_venda = $6, estoque_atual = $7, 
+          ncm = $8, aliq_icms = $9, aliq_ipi = $10
       WHERE id = $11
       RETURNING *
-    `, [codigo, descricao, categoria, unidade, preco_custo, preco_venda, estoque_atual, ncm, aliq_icms, aliq_ipi, id]);
+    `, [
+      codigo,
+      descricao,
+      categoria,
+      unidade || 'UN',
+      Number(preco_custo),
+      Number(preco_venda),
+      parseInt(String(estoque_atual || 0), 10),
+      ncm || '0000.00.00',
+      Number(aliq_icms || 18),
+      Number(aliq_ipi || 0),
+      id
+    ]);
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: 'Produto não encontrado' });
+    }
     res.json(result.rows[0]);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -135,10 +163,20 @@ app.get('/api/notas', async (req, res) => {
         p_emit.nome_fantasia as emitente_fantasia,
         p_emit.municipio as emitente_municipio,
         p_emit.uf as emitente_uf,
+        row_to_json(p_emit.*) as emitente,
         p_dest.nome_fantasia as destinatario_fantasia,
         p_dest.municipio as destinatario_municipio,
         p_dest.uf as destinatario_uf,
-        (SELECT count(*) FROM nota_itens ni WHERE ni.nota_id = n.id) as total_itens
+        row_to_json(p_dest.*) as destinatario,
+        (SELECT count(*) FROM nota_itens ni WHERE ni.nota_id = n.id) as total_itens,
+        COALESCE(
+          (SELECT json_agg(ni.* ORDER BY ni.id ASC) FROM nota_itens ni WHERE ni.nota_id = n.id),
+          '[]'::json
+        ) as itens,
+        COALESCE(
+          (SELECT json_agg(d.* ORDER BY d.id ASC) FROM duplicatas d WHERE d.nota_id = n.id),
+          '[]'::json
+        ) as duplicatas
       FROM notas_fiscais n
       LEFT JOIN parceiros p_emit ON n.emitente_id = p_emit.id
       LEFT JOIN parceiros p_dest ON n.destinatario_id = p_dest.id
@@ -156,7 +194,13 @@ app.get('/api/notas/:id', async (req, res) => {
     const notaRes = await query(`
       SELECT 
         n.*,
+        p_emit.nome_fantasia as emitente_fantasia,
+        p_emit.municipio as emitente_municipio,
+        p_emit.uf as emitente_uf,
         row_to_json(p_emit.*) as emitente,
+        p_dest.nome_fantasia as destinatario_fantasia,
+        p_dest.municipio as destinatario_municipio,
+        p_dest.uf as destinatario_uf,
         row_to_json(p_dest.*) as destinatario
       FROM notas_fiscais n
       LEFT JOIN parceiros p_emit ON n.emitente_id = p_emit.id
@@ -224,7 +268,7 @@ app.post('/api/notas', async (req, res) => {
     const numClean = String(numero_nf).replace(/\D/g, '').padStart(9, '0');
     const randomCode = Math.floor(10000000 + Math.random() * 90000000);
     const chaveSemDv = `${ufCode}${aamm}${cnpjClean}55001${numClean}1${randomCode}`;
-    
+
     // Cálculo do dígito verificador módulo 11
     let peso = 2;
     let soma = 0;
